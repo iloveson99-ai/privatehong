@@ -64,7 +64,7 @@ export async function synthesizeRecommendation(
   ];
 
   // Leader agent uses the stronger Gemini Pro model
-  const geminiProOptions = { model: 'gemini-2.5-pro-preview-05-06', temperature: 0.4 };
+  const geminiProOptions = { model: 'gemini-1.5-pro', temperature: 0.4 };
 
   let responseText: string;
   try {
