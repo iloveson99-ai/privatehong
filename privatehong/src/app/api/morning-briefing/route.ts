@@ -54,7 +54,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     // 3. Fetch portfolio
     const { data: holdings } = await supabase.from('portfolio_holdings').select('*');
-    const safeHoldings = (holdings ?? []) as Parameters<typeof collectMarketData>[0];
+
+    // 포트폴리오가 없으면 등록 안내 메시지 전송
+    if (!holdings || holdings.length === 0) {
+      await sendMessage(
+        '📋 안녕하세요! 아직 보유 종목이 등록되지 않아서 브리핑을 드리기가 어렵네요 😊\n\n텔레그램에서 보유하신 주식을 알려주시면 바로 등록해드릴게요!\n\n예시:\n• <code>애플 100주 갖고 있어, 165달러에 샀어</code>\n• <code>삼성전자 200주, 평균 82,000원</code>\n\n/portfolio 명령어를 눌러 시작해보세요! 🙂'
+      );
+      return NextResponse.json({ ok: true, skipped: 'no_portfolio' });
+    }
+
+    const safeHoldings = holdings as Parameters<typeof collectMarketData>[0];
 
     // 4. Fetch tax tracker
     const taxSummary = await getTaxSummary(supabase, year);
