@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { AIMessage, AIResponse, AICallOptions } from './types';
 
-const DEFAULT_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MODEL = 'gemini-1.5-flash-latest';
 
 export async function callGemini(messages: AIMessage[], options: AICallOptions = {}): Promise<AIResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
