@@ -26,33 +26,54 @@ function getBotHandler(): (req: NextRequest) => Promise<Response> {
 
   const bot = new Bot(token);
 
+  // ─── Global error handler ──────────────────────────────────────
+  bot.catch((err) => {
+    console.error('[grammy] Unhandled error:', err.error, 'ctx:', err.ctx?.update);
+  });
+
   // ─── /start ────────────────────────────────────────────────────
   bot.command('start', async (ctx) => {
-    const supabase = getSupabase();
-    const chatId = ctx.chat.id.toString();
+    try {
+      const supabase = getSupabase();
+      const chatId = ctx.chat.id.toString();
 
-    const { data: holdings } = await supabase.from('portfolio_holdings').select('*');
-    const hasHoldings = holdings && holdings.length > 0;
+      const { data: holdings, error: holdingsErr } = await supabase
+        .from('portfolio_holdings')
+        .select('*');
 
-    if (hasHoldings) {
+      if (holdingsErr) {
+        console.error('[start] portfolio_holdings query error:', holdingsErr);
+      }
+
+      const hasHoldings = holdings && holdings.length > 0;
+
+      if (hasHoldings) {
+        await ctx.reply(
+          `안녕하세요! 👋 다시 오셨네요 😊\n\n현재 <b>${holdings.length}개</b> 종목을 보유 중이세요.\n\n/portfolio - 현재 보유 종목 확인\n/today - 오늘 브리핑 보기\n/help - 사용법 안내`,
+          { parse_mode: 'HTML' }
+        );
+        return;
+      }
+
+      // 먼저 메시지를 보내고, 그 다음 DB 작업
       await ctx.reply(
-        `안녕하세요! 👋 다시 오셨네요 😊\n\n현재 <b>${holdings.length}개</b> 종목을 보유 중이세요.\n\n/portfolio - 현재 보유 종목 확인\n/today - 오늘 브리핑 보기\n/help - 사용법 안내`,
+        `안녕하세요! 👋 AI 투자 어드바이저입니다 😊\n\n매일 아침 시장을 분석해서 투자 브리핑을 보내드릴게요.\n\n먼저 현재 보유하고 계신 주식을 알려주시겠어요?\n\n예시:\n• <code>애플 100주 갖고 있어, 165달러에 샀어</code>\n• <code>삼성전자 200주, 평균 82,000원</code>\n• <code>NVDA 50주 420달러에 매수했어</code>\n\n없으시면 "없어요"라고 말씀해 주세요 🙂`,
         { parse_mode: 'HTML' }
       );
-      return;
+
+      // 온보딩 상태 저장 (실패해도 사용자에겐 이미 메시지 전송됨)
+      const { error: upsertErr } = await supabase.from('conversation_state').upsert({
+        chat_id: chatId,
+        state: { onboarding: { step: 'waiting_for_holdings', holdings: [] } },
+        updated_at: new Date().toISOString(),
+      });
+      if (upsertErr) {
+        console.error('[start] conversation_state upsert error:', upsertErr);
+      }
+    } catch (err) {
+      console.error('[start] Error:', err);
+      await ctx.reply('안녕하세요! 😊 잠시 오류가 있었어요. 다시 /start 를 눌러주세요.');
     }
-
-    // 포트폴리오가 없으면 온보딩 시작
-    await supabase.from('conversation_state').upsert({
-      chat_id: chatId,
-      state: { onboarding: { step: 'waiting_for_holdings', holdings: [] } },
-      updated_at: new Date().toISOString(),
-    });
-
-    await ctx.reply(
-      `안녕하세요! 👋 AI 투자 어드바이저입니다 😊\n\n매일 아침 시장을 분석해서 투자 브리핑을 보내드릴게요.\n\n먼저 현재 보유하고 계신 주식을 알려주시겠어요?\n\n예시:\n• <code>애플 100주 갖고 있어, 165달러에 샀어</code>\n• <code>삼성전자 200주, 평균 82,000원</code>\n• <code>NVDA 50주 420달러에 매수했어</code>\n\n없으시면 "없어요"라고 말씀해 주세요 🙂`,
-      { parse_mode: 'HTML' }
-    );
   });
 
   // ─── /today ────────────────────────────────────────────────────
