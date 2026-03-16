@@ -26,7 +26,7 @@ const SYSTEM_PROMPT = `당신은 수석 투자 전략가입니다. 보수적 분
 반드시 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트를 절대 포함하지 마세요. 마크다운 코드블록도 쓰지 마세요.
 {"summary":"오늘의 핵심 한 줄","market_outlook":"시장 전망 2-3문장","actions":[{"ticker":"종목코드","name":"종목명","action":"매수|매도|보유|비중축소|비중확대","quantity_or_amount":"10주 또는 100만원어치","reason":"이유","tax_impact":"세금 영향"}],"tax_alert":{"ytd_realized_gain":숫자,"remaining_deduction":숫자,"estimated_annual_tax":숫자,"tax_saving_opportunities":["기회1"]},"risk_level":"안전|보통|주의|위험","next_watch":["내일 주목 이벤트1"]}`;
 
-const TIMEOUT_MS = 25_000;
+const TIMEOUT_MS = 55_000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([

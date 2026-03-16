@@ -4,7 +4,7 @@ import type { AIMessage, AIResponse, AICallOptions } from './types';
 
 export type { AIMessage, AIResponse, AICallOptions };
 
-const TIMEOUT_MS = 25_000;
+const TIMEOUT_MS = 55_000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
