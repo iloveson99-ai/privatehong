@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Bot, webhookCallback } from 'grammy';
+
+export const maxDuration = 60;
 import type { ParseMode } from '@grammyjs/types';
 import { createClient } from '@supabase/supabase-js';
 import { collectMarketData } from '@/lib/market-data';

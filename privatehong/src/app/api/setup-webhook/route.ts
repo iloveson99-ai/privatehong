@@ -7,7 +7,8 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN is not set' }, { status: 500 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL;
+  // VERCEL_URL은 배포마다 바뀌는 URL이라 production URL이 우선되어야 함
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
   if (!appUrl) {
     return NextResponse.json({ error: 'NEXT_PUBLIC_APP_URL or VERCEL_URL not set' }, { status: 500 });
   }
